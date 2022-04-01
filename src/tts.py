@@ -49,14 +49,15 @@ class TTS:
 
 
 
-    """
-        简单模块封装：文本转语音并播放
-        @read_string    要读的文字，包括弹幕发送人、弹幕内容等信息，在弹幕获取模块处理好作为参数直接传入
-    """
-    async def play_tts_mp3(self, read_string):
+    
+    async def play_tts_mp3(self, read_string: str):
+        """
+        文本转语音并播放合成好的mp3音频文件
+        read_string: 要读的文字，包括弹幕发送人、弹幕内容等信息，在弹幕获取模块处理好作为参数直接传入
+        """
+
         if read_string is None:
             return False
-
         # 结合传入的文字内容修改（覆写）SSML文件--SSML文件是根据Microsoft提供的格式来写的
         # 具体参考https://docs.microsoft.com/zh-cn/azure/cognitive-services/speech-service/speech-synthesis-markup?tabs=csharp
         with open(TTS.ssml_file_name, 'w', encoding='utf-8') as ssml_file:
@@ -75,7 +76,7 @@ class TTS:
         
 
 
-
+# test
 async def main():
     tts = TTS()
     # 获取弹幕
