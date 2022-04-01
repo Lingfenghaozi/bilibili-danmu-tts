@@ -1,7 +1,8 @@
 import requests
 import time
+import threading
 
-class BilibiliDanmu:
+class BilibiliDanmu(threading.Thread):
     # 网络请求参数
     url = 'https://api.live.bilibili.com/xlive/web-room/v1/dM/gethistory'
     headers = {
@@ -12,7 +13,12 @@ class BilibiliDanmu:
         'roomid': '13645871', # 房间号，获取不同主播的直播间弹幕修改这里
     }
 
-    def __init__(self, max_history_list = 50, max_read_list = 3):
+
+    
+    def __init__(self, max_history_list = 50, max_read_list = 3, sleep_time = 1):
+        # 
+        threading.Thread.__init__(self)
+
         """
             从网络请求返回里裁剪出来的自定义数据存储结构
             数据结构参考：
@@ -31,39 +37,20 @@ class BilibiliDanmu:
         # 要读的弹幕的池子（可设置上限只读最近的几条弹幕，过滤因弹幕过多、读弹幕速度慢等因素导致的时效性不高的弹幕）
         self.danmu_list_read = []
 
-        # 用于显示的弹幕列表和等待TTS后播放的弹幕池子的最大上限
+        # 用于显示的弹幕列表的最大上限
         self.max_history_list = max_history_list if max_history_list > 0 else 50
+
+        # 等待TTS完成后播放音频的弹幕池子
         self.max_read_list = max_read_list if max_read_list > 0 else 3
 
-        """
-            第一次启动，会先去发送一次请求来获得历史弹幕
-        """
-        # 带参请求
-        message = requests.get(url=BilibiliDanmu.url, headers=BilibiliDanmu.headers, params=BilibiliDanmu.data).json()
-        # 从网页请求返回的结果提取弹幕信息，包括发送人、发送时间、发送内容等键值对的列表list
-        danmu_info = message['data']['room']
-        # 先判断获取的弹幕数量是否为0，即是否有历史弹幕
-        if len(danmu_info) > 0:
-            # 把获取到的弹幕拆分存储到我们的弹幕历史列表中
-            for info in danmu_info:
-                danmu = {'nickname':info['nickname'], 'text':info['text'], 'timeline':info['timeline']}
-                self.add_history_list(danmu)
-                self.add_show_list(danmu)
-
-
-        # 更新显示弹幕
-        self.update_danmu_show()
-
-
-
+        # 获取弹幕的间隔时间（单位：秒）
+        self.sleep_time = sleep_time if sleep_time > 0 else 1
 
 
     """
         循环获取弹幕，实现更新
-        @sleep_time 轮询获取弹幕的间隔时间（单位：秒），默认1
     """
-    def get_new_danmu(self, sleep_time = 1):
-        self.sleep_time = sleep_time
+    def get_new_danmu(self):
         while True:
             # 带参请求
             message = requests.get(url=BilibiliDanmu.url, headers=BilibiliDanmu.headers, params=BilibiliDanmu.data).json()
@@ -88,6 +75,29 @@ class BilibiliDanmu:
                 self.update_danmu_show()
 
             time.sleep(self.sleep_time)
+    
+
+    def run(self):
+        """
+            第一次启动，会先去发送一次请求来获得历史弹幕
+        """
+        # 带参请求
+        message = requests.get(url=BilibiliDanmu.url, headers=BilibiliDanmu.headers, params=BilibiliDanmu.data).json()
+        # 从网页请求返回的结果提取弹幕信息，包括发送人、发送时间、发送内容等键值对的列表list
+        danmu_info = message['data']['room']
+        # 先判断获取的弹幕数量是否为0，即是否有历史弹幕
+        if len(danmu_info) > 0:
+            # 把获取到的弹幕拆分存储到我们的弹幕历史列表中
+            for info in danmu_info:
+                danmu = {'nickname':info['nickname'], 'text':info['text'], 'timeline':info['timeline']}
+                self.add_history_list(danmu)
+                self.add_show_list(danmu)
+        
+
+        # 更新显示弹幕
+        self.update_danmu_show()
+        time.sleep(self.sleep_time)
+        self.get_new_danmu()
 
 
 
@@ -106,10 +116,18 @@ class BilibiliDanmu:
     def set_readlist_max(self, max_read_list):
         self.max_read_list = max_read_list if max_read_list > 0 else 3
 
+    """
+        用于提供UI控制的弹幕获取时间间隔（单位：秒）
+    """
+    def set_sleep_time(self, sleep_time):
+        self.sleep_time = sleep_time if sleep_time > 0 else 1
+
 
     """
-        为弹幕TTS前做格式化：   xxx说：abcd，efg
+        为弹幕TTS前做格式化
         @danmu  经过我们自己处理记录的弹幕信息字典
+        参考：
+            xxx说：abcd，efg
     """
     def format_danmu_read(self, danmu):
         if danmu is None:
@@ -179,9 +197,9 @@ class BilibiliDanmu:
             for danmu in self.danmu_list_show:
                 print("{0} {1} 说：{2}".format(danmu['timeline'], danmu['nickname'], danmu['text']))
             self.danmu_list_show.clear()
-
+    
         
 
 if __name__ == "__main__":
-    bilibili_danmu = BilibiliDanmu()
-    bilibili_danmu.get_new_danmu()
+    thread_bilibili_danmu = BilibiliDanmu()
+    thread_bilibili_danmu.start()
