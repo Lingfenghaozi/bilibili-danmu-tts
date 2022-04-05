@@ -1,13 +1,14 @@
 import requests
 import time
 import threading
+import traceback
 
 class BilibiliDanmu(threading.Thread):
     # 网络请求参数
     url = 'https://api.live.bilibili.com/xlive/web-room/v1/dM/gethistory'
     headers = {
         'Host': 'api.live.bilibili.com',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36 SE 2.X MetaSr 1.0',
     }
     data = {
         'roomid': '13645871', # 房间号，获取不同主播的直播间弹幕修改这里
@@ -58,51 +59,64 @@ class BilibiliDanmu(threading.Thread):
         循环获取弹幕，实现更新
         """
         while True:
-            # 带参请求
-            message = requests.get(url=BilibiliDanmu.url, headers=BilibiliDanmu.headers, params=BilibiliDanmu.data).json()
-            # 从网页请求返回的结果提取弹幕信息，包括发送人、发送时间、发送内容等键值对的列表list
-            danmu_info = message['data']['room']
+            try:
+                # 带参请求
+                message = requests.get(url=BilibiliDanmu.url, headers=BilibiliDanmu.headers, params=BilibiliDanmu.data).json()
+                # 从网页请求返回的结果提取弹幕信息，包括发送人、发送时间、发送内容等键值对的列表list
+                danmu_info = message['data']['room']
 
-            # 判断当次网页请求返回结果是否获取到弹幕（可能包含已记录和未记录）
-            if len(danmu_info) > 0:
-                # 如果没有历史弹幕，则此次获取到的弹幕直接全部添加进历史弹幕列表中记录起来
-                if len(self.danmu_list_history) == 0:
-                    for i in range(len(danmu_info)):
-                        danmu = {'nickname':danmu_info[i]['nickname'], 'text':danmu_info[i]['text'], 'timeline':danmu_info[i]['timeline']}
-                        self.add_history_list(danmu)
-                        self.add_show_list(danmu)
-                        self.add_read_list(danmu)
-                else:
-                    # 轮询读获取到的弹幕列表
-                    for i in range(len(danmu_info)):
-                        # 逐条弹幕根据获取到的发送时间比较本地已经记录的最后一条弹幕的时间判断是否是新消息，若是新的则将后边的全部添加（内层循环负责操作后续的添加），然后直接结束外层循环（外层循环负责检查判断）
-                        if danmu_info[i]['timeline'] > self.danmu_list_history[-1]['timeline']:
-                            for j in range(i, len(danmu_info)):
-                                danmu = {'nickname':danmu_info[j]['nickname'], 'text':danmu_info[j]['text'], 'timeline':danmu_info[j]['timeline']}
-                                self.add_history_list(danmu)
-                                self.add_show_list(danmu)
-                                self.add_read_list(danmu)
-                            break
-                
-                # 更新显示弹幕
-                self.update_danmu_show()
+                # 判断当次网页请求返回结果是否获取到弹幕（可能包含已记录和未记录）
+                if len(danmu_info) > 0:
+                    # 如果没有历史弹幕，则此次获取到的弹幕直接全部添加进历史弹幕列表中记录起来
+                    if len(self.danmu_list_history) == 0:
+                        for i in range(len(danmu_info)):
+                            danmu = {'nickname':danmu_info[i]['nickname'], 'text':danmu_info[i]['text'], 'timeline':danmu_info[i]['timeline']}
+                            self.add_history_list(danmu)
+                            self.add_show_list(danmu)
+                            self.add_read_list(danmu)
+                    else:
+                        # 轮询读获取到的弹幕列表
+                        for i in range(len(danmu_info)):
+                            # 逐条弹幕根据获取到的发送时间比较本地已经记录的最后一条弹幕的时间判断是否是新消息，若是新的则将后边的全部添加（内层循环负责操作后续的添加），然后直接结束外层循环（外层循环负责检查判断）
+                            if danmu_info[i]['timeline'] > self.danmu_list_history[-1]['timeline']:
+                                for j in range(i, len(danmu_info)):
+                                    danmu = {'nickname':danmu_info[j]['nickname'], 'text':danmu_info[j]['text'], 'timeline':danmu_info[j]['timeline']}
+                                    self.add_history_list(danmu)
+                                    self.add_show_list(danmu)
+                                    self.add_read_list(danmu)
+                                break
+                    
+                    # 更新显示弹幕
+                    self.update_danmu_show()
+                time.sleep(self.sleep_time)
 
-            time.sleep(self.sleep_time)
+            except Exception:
+                print(traceback.format_exc())
+                print("网络请求异常，将于5秒后自动忽略并重新发送弹幕请求。")
+                print("网络请求异常，将于5秒后自动忽略并重新发送弹幕请求。")
+                print("网络请求异常，将于5秒后自动忽略并重新发送弹幕请求。")
+                time.sleep(5)
+                pass
     
 
     def run(self):
         # 第一次启动，会先去发送一次请求来获得历史弹幕
-        # 带参请求
-        message = requests.get(url=BilibiliDanmu.url, headers=BilibiliDanmu.headers, params=BilibiliDanmu.data).json()
-        # 从网页请求返回的结果提取弹幕信息，包括发送人、发送时间、发送内容等键值对的列表list
-        danmu_info = message['data']['room']
-        # 先判断获取的弹幕数量是否为0，即是否有历史弹幕
-        if len(danmu_info) > 0:
-            # 把获取到的弹幕拆分存储到我们的弹幕历史列表中
-            for info in danmu_info:
-                danmu = {'nickname':info['nickname'], 'text':info['text'], 'timeline':info['timeline']}
-                self.add_history_list(danmu)
-                self.add_show_list(danmu)
+        try:
+            # 带参请求
+            message = requests.get(url=BilibiliDanmu.url, headers=BilibiliDanmu.headers, params=BilibiliDanmu.data).json()
+            # 从网页请求返回的结果提取弹幕信息，包括发送人、发送时间、发送内容等键值对的列表list
+            danmu_info = message['data']['room']
+            # 先判断获取的弹幕数量是否为0，即是否有历史弹幕
+            if len(danmu_info) > 0:
+                # 把获取到的弹幕拆分存储到我们的弹幕历史列表中
+                for info in danmu_info:
+                    danmu = {'nickname':info['nickname'], 'text':info['text'], 'timeline':info['timeline']}
+                    self.add_history_list(danmu)
+                    self.add_show_list(danmu)
+        except Exception:
+            print(traceback.format_exc())
+            print("初始化时发生错误，第一次获取历史弹幕的网络请求异常，请关闭后重新运行程序。")
+            pass
         
 
         # 更新显示弹幕
