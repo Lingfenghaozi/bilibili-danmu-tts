@@ -1,7 +1,6 @@
 import requests
 import time
 import threading
-import traceback
 
 class BilibiliDanmu(threading.Thread):
     # 网络请求参数
@@ -91,10 +90,6 @@ class BilibiliDanmu(threading.Thread):
                 time.sleep(self.sleep_time)
 
             except Exception:
-                print(traceback.format_exc())
-                print("网络请求异常，将于5秒后自动忽略并重新发送弹幕请求。")
-                print("网络请求异常，将于5秒后自动忽略并重新发送弹幕请求。")
-                print("网络请求异常，将于5秒后自动忽略并重新发送弹幕请求。")
                 time.sleep(5)
                 pass
     
@@ -104,18 +99,17 @@ class BilibiliDanmu(threading.Thread):
         try:
             # 带参请求
             message = requests.get(url=BilibiliDanmu.url, headers=BilibiliDanmu.headers, params=BilibiliDanmu.data).json()
-            # 从网页请求返回的结果提取弹幕信息，包括发送人、发送时间、发送内容等键值对的列表list
-            danmu_info = message['data']['room']
-            # 先判断获取的弹幕数量是否为0，即是否有历史弹幕
-            if len(danmu_info) > 0:
-                # 把获取到的弹幕拆分存储到我们的弹幕历史列表中
-                for info in danmu_info:
-                    danmu = {'nickname':info['nickname'], 'text':info['text'], 'timeline':info['timeline']}
-                    self.add_history_list(danmu)
-                    self.add_show_list(danmu)
+            if message:
+                # 从网页请求返回的结果提取弹幕信息，包括发送人、发送时间、发送内容等键值对的列表list
+                danmu_info = message['data']['room']
+                # 先判断获取的弹幕数量是否为0，即是否有历史弹幕
+                if len(danmu_info) > 0:
+                    # 把获取到的弹幕拆分存储到我们的弹幕历史列表中
+                    for info in danmu_info:
+                        danmu = {'nickname':info['nickname'], 'text':info['text'], 'timeline':info['timeline']}
+                        self.add_history_list(danmu)
+                        self.add_show_list(danmu)
         except Exception:
-            print(traceback.format_exc())
-            print("初始化时发生错误，第一次获取历史弹幕的网络请求异常，请关闭后重新运行程序。")
             pass
         
 
