@@ -1,6 +1,6 @@
 import asyncio
 import time
-from bilibili_danmu import BilibiliDanmu
+from danmu_shortconnect import BilibiliDanmu
 from tts import TTS
 
 
