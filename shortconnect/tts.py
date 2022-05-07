@@ -71,30 +71,6 @@ class TTS:
             return
 
 
-    def play_tts_mp3(self, read_string: str):
-        """
-        文本转语音并播放合成好的mp3音频文件
-        read_string: 要读的文字，包括弹幕发送人、弹幕内容等信息，在弹幕获取模块处理好作为参数直接传入
-        """
-
-        if read_string is None:
-            return False
-        # 结合传入的文字内容修改（覆写）SSML文件--SSML文件是根据Microsoft提供的格式来写的
-        # 具体参考https://docs.microsoft.com/zh-cn/azure/cognitive-services/speech-service/speech-synthesis-markup?tabs=csharp
-        with open(TTS.ssml_file_name, 'w', encoding='utf-8') as ssml_file:
-            ssml_file.write(TTS.head_ssml + '\t\t\t\t' + read_string + TTS.tail_ssml)
-
-        # 执行拼接好的edge-tts命令，利用含有弹幕信息及朗读参数的SSML文件，获取转换后的弹幕音频文件
-        os.system(TTS.cmd_tts)
-
-        try:
-            # 调用playsound模块读转换好的mp3弹幕文件
-            playsound(TTS.danmu_file_name)
-        except Exception:
-            return
-
-        
-
 # test
 async def main():
     tts = TTS()
@@ -104,17 +80,6 @@ async def main():
     read_string2 = "先来模拟测试一下弹幕，测试2。"
     await tts.play_tts_mp3(read_string2)
 
-
-def main():
-    tts = TTS()
-    # 获取弹幕
-    read_string = "先来模拟测试一下弹幕，测试1。"
-    tts.play_tts_mp3(read_string)
-    read_string2 = "先来模拟测试一下弹幕，测试2。"
-    tts.play_tts_mp3(read_string2)
-    read_string2 = "先来模拟测试一下弹幕，测试3。"
-    tts.play_tts_mp3(read_string2)
-    
 
 if __name__ == "__main__":
     asyncio.run(main())
