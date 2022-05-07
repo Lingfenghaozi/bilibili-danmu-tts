@@ -176,27 +176,9 @@ class BilibiliDanmu():
         return read_string
 
 
-# async def test():
-#     thread_bilibili_danmu = BilibiliDanmu('5050')
-#     async def first_task(num):
-#         for i in range(1, num+1):
-#             print(i)
-
-#     async def test():
-#         while True:
-#             await first_task(10)
-#             await asyncio.sleep(10)
-
-#     task1 = asyncio.create_task(test())
-#     task2 = asyncio.create_task(thread_bilibili_danmu.startup())
-#     task_list = [task1, task2]
-#     await asyncio.wait(task_list)
-
-
 def main():
     thread_bilibili_danmu = BilibiliDanmu('13645871')
     asyncio.run(thread_bilibili_danmu.startup())
-    # asyncio.run(test())
     
 
 if __name__ == "__main__":
