@@ -14,7 +14,7 @@
 
 ### 环境
 
-如需使用，请确认安装有 **`edge--tts`** 、**`zlib`** 、**`brotli`** 、以及 **`playsound`** 库
+如需使用，请确认安装有 **`edge--tts`** 、**`zlib`** 、**`brotli`** 、**`AioWebSocket·`** 以及 **`playsound`** 库
 ```
 pip install edge-tts
 ```
@@ -26,6 +26,9 @@ pip install zlib
 ```
 ```
 pip install brotli
+```
+```
+pip install AioWebSocket
 ```
 将以上代码输入cmd中运行即可，如有失败，可自行搜索换源下载或其他解决方案
 
