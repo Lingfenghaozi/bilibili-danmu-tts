@@ -58,8 +58,11 @@ class TTS:
             return False
         # 结合传入的文字内容修改（覆写）SSML文件--SSML文件是根据Microsoft提供的格式来写的
         # 具体参考https://docs.microsoft.com/zh-cn/azure/cognitive-services/speech-service/speech-synthesis-markup?tabs=csharp
-        with open(TTS.ssml_file_name, 'w', encoding='utf-8') as ssml_file:
-            ssml_file.write(TTS.head_ssml + '\t\t\t\t' + read_string + TTS.tail_ssml)
+        try:
+            with open(TTS.ssml_file_name, 'w', encoding='utf-8') as ssml_file:
+                ssml_file.write(TTS.head_ssml + '\t\t\t\t' + read_string + TTS.tail_ssml)
+        except Exception:
+            pass
 
         # 执行拼接好的edge-tts命令，利用含有弹幕信息及朗读参数的SSML文件，获取转换后的弹幕音频文件
         os.system(TTS.cmd_tts)
