@@ -28,8 +28,6 @@ class ThreadTTS(threading.Thread):
                 pass
 
 
-# test
-
 def main():
     bilibili_danmu = BilibiliDanmu('5050', 1)
     thread_tts = ThreadTTS(bilibili_danmu)
