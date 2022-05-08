@@ -176,7 +176,7 @@ class BilibiliDanmu():
 
 
 def main():
-    thread_bilibili_danmu = BilibiliDanmu('13645871')
+    thread_bilibili_danmu = BilibiliDanmu('5050')
     asyncio.run(thread_bilibili_danmu.startup())
     
 
