@@ -33,7 +33,6 @@ class BilibiliDanmu():
         while True:
             await asyncio.sleep(30)
             await websocket.send(bytes.fromhex(self.heartbeat_package))
-            print('[通知] --------已尝试向服务器发送了一次心跳包--------')
 
 
     # 接收数据包
